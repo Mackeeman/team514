@@ -1,0 +1,208 @@
+<!-- Firebase -->
+<script type="module" src="js/firebase.js"></script>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team 514 — Flag Football MTL</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<nav class="navbar">
+  <a href="#" class="navbar-brand" onclick="showPage('home');return false">
+    <div class="brand-number">514</div>
+    <div class="brand-tag">Flag Football MTL</div>
+  </a>
+  <div class="navbar-desktop">
+    <a href="#" class="nav-link active" data-page="home"     onclick="showPage('home');return false">Home</a>
+    <a href="#" class="nav-link"        data-page="history"  onclick="showPage('history');return false">History</a>
+    <a href="#" class="nav-link"        data-page="stats"    onclick="showPage('stats');return false">Stats</a>
+    <a href="#" class="nav-link"        data-page="media"    onclick="showPage('media');return false">Media</a>
+    <a href="#" class="nav-link"        data-page="strategy" onclick="showPage('strategy');return false">Strategy</a>
+  </div>
+  <button class="admin-btn" onclick="openAdminModal()">⚙️ Admin</button>
+</nav>
+
+<!-- ══════════════════════════════════════════════ -->
+<!--  HOME                                          -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-home" class="page">
+  <div class="page-hero">
+    <div class="page-hero-number">514</div>
+    <h1> Team 514</h1>
+    <p>Flag Football · Montreal · 2025 Season</p>
+  </div>
+  <div class="main-content">
+
+    <div class="section-title">🏅 Season Leaders</div>
+    <div class="grid-5" id="leaders-grid"></div>
+
+    <div style="height:28px"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div class="section-title" style="margin-bottom:0;flex:1">📅 Upcoming Matches</div>
+      <button class="btn btn-primary" style="font-size:0.78rem;padding:7px 14px"
+        onclick="requireAdmin(() => openAdminModal('match'))">+ Add Match</button>
+    </div>
+    <div id="upcoming-matches"></div>
+
+    <div style="height:28px"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div class="section-title" style="margin-bottom:0;flex:1"> Training Schedule</div>
+      <button class="btn btn-primary" style="font-size:0.78rem;padding:7px 14px"
+        onclick="requireAdmin(() => openAdminModal('training'))">+ Edit</button>
+    </div>
+    <div id="trainings-list"></div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!--  HISTORY                                       -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-history" class="page" style="display:none">
+  <div class="page-hero">
+    <div class="page-hero-number">514</div>
+    <h1> History</h1>
+    <p>Past results and player performances</p>
+  </div>
+  <div class="main-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div class="section-title" style="margin-bottom:0;flex:1">Games Played</div>
+      <button class="btn btn-primary" style="font-size:0.78rem;padding:7px 14px"
+        onclick="requireAdmin(() => openAdminModal('result'))">+ Enter Result</button>
+    </div>
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!--  STATS                                         -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-stats" class="page" style="display:none">
+  <div class="page-hero">
+    <div class="page-hero-number">514</div>
+    <h1> Stats</h1>
+    <p>Individual performance by category</p>
+  </div>
+  <div class="main-content">
+    <div id="season-selector"></div>
+    <div id="stats-tabs" class="tabs">
+      <button class="tab-btn active" data-tab="receiving" onclick="renderStatsTab('receiving')">🙌 Receiving</button>
+      <button class="tab-btn"        data-tab="rushing"   onclick="renderStatsTab('rushing')">🏃 Rushing</button>
+      <button class="tab-btn"        data-tab="passing"   onclick="renderStatsTab('passing')">🏈 Passing</button>
+      <button class="tab-btn"        data-tab="defense"   onclick="renderStatsTab('defense')">🛡️ Defense</button>
+      <button class="tab-btn"        data-tab="draft"     onclick="renderStatsTab('draft')">⏱️ Draft</button>
+    </div>
+    <div id="stats-panel-receiving" class="tab-panel active"></div>
+    <div id="stats-panel-rushing"   class="tab-panel"></div>
+    <div id="stats-panel-passing"   class="tab-panel"></div>
+    <div id="stats-panel-defense"   class="tab-panel"></div>
+    <div id="stats-panel-draft"     class="tab-panel"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!--  MEDIA                                         -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-media" class="page" style="display:none">
+  <div class="page-hero">
+    <div class="page-hero-number">514</div>
+    <h1> Media</h1>
+    <p>Team photos and highlights</p>
+  </div>
+  <div class="main-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div class="section-title" style="margin-bottom:0;flex:1">Gallery</div>
+      <button class="btn btn-primary" style="font-size:0.78rem;padding:7px 14px"
+        onclick="requireAdmin(() => openAdminModal('media'))">+ Add Photo</button>
+    </div>
+    <div id="media-grid" class="media-grid"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!--  STRATEGY                                      -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-strategy" class="page" style="display:none">
+  <div class="page-hero">
+    <div class="page-hero-number">514</div>
+    <h1> Strategy</h1>
+    <p>Playbook and team strategies</p>
+  </div>
+  <div class="main-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:20px">
+      <div id="strategy-tabs" class="tabs" style="flex:1;margin-bottom:0">
+        <button class="tab-btn active" data-tab="defense"  onclick="renderStrategyTab('defense')"> Defense</button>
+        <button class="tab-btn"        data-tab="offense"  onclick="renderStrategyTab('offense')"> Offense</button>
+        <button class="tab-btn"        data-tab="playbook" onclick="renderStrategyTab('playbook')"> Playbook</button>
+      </div>
+      <button class="btn btn-primary" style="font-size:0.78rem;padding:7px 14px"
+        onclick="requireAdmin(() => openAdminModal('strategy'))">+ Add</button>
+    </div>
+    <div id="strategy-panels">
+      <div id="strategy-panel-defense"  class="tab-panel active"></div>
+      <div id="strategy-panel-offense"  class="tab-panel"></div>
+      <div id="strategy-panel-playbook" class="tab-panel"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!--  PASSWORD SCREEN                               -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="passwordScreen" class="password-screen">
+  <div class="password-box">
+    <div style="font-size:2rem;margin-bottom:8px">🔒</div>
+    <h2>Admin Panel</h2>
+    <p>Enter the password to access the admin panel.</p>
+    <input type="password" id="passwordInput" class="form-input" placeholder="Password" />
+    <div id="passwordError" class="error-msg">Wrong password. Try again.</div>
+    <div class="btn-row" style="justify-content:center;margin-top:16px">
+      <button class="btn btn-primary" id="passwordSubmit">Enter</button>
+      <button class="btn btn-ghost"   id="passwordCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!--  ADMIN OVERLAY                                 -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="adminOverlay" class="admin-overlay" onclick="if(event.target===this)closeAdmin()">
+  <div id="adminContent" style="width:100%;max-width:600px;max-height:90vh;overflow-y:auto"></div>
+</div>
+
+<!-- ── TOAST ── -->
+<div id="globalToast" class="toast"></div>
+
+<!-- ── SCRIPTS ── -->
+<script src="js/data.js"></script>
+<script src="js/home.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/pages.js"></script>
+<script>
+  window.pageRenderers = {
+    home:     renderHome,
+    history:  renderHistory,
+    stats:    renderStats,
+    media:    renderMedia,
+    strategy: renderStrategy,
+  };
+
+  // Restore last active page on refresh
+  const lastPage = localStorage.getItem('team514_activePage') || 'home';
+  showPage(lastPage);
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeAdmin();
+  });
+</script>
+</body>
+</html>
