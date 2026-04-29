@@ -110,12 +110,14 @@
   <div class="main-content">
     <div id="season-selector"></div>
     <div id="stats-tabs" class="tabs">
+      <button class="tab-btn active" data-tab="players"   onclick="renderStatsTab('players')">👤 Players</button>
       <button class="tab-btn active" data-tab="receiving" onclick="renderStatsTab('receiving')">🙌 Receiving</button>
       <button class="tab-btn"        data-tab="rushing"   onclick="renderStatsTab('rushing')">🏃 Rushing</button>
       <button class="tab-btn"        data-tab="passing"   onclick="renderStatsTab('passing')">🏈 Passing</button>
       <button class="tab-btn"        data-tab="defense"   onclick="renderStatsTab('defense')">🛡️ Defense</button>
       <button class="tab-btn"        data-tab="draft"     onclick="renderStatsTab('draft')">⏱️ Draft</button>
     </div>
+    <div id="stats-panel-players" class="tab-panel active"></div>
     <div id="stats-panel-receiving" class="tab-panel active"></div>
     <div id="stats-panel-rushing"   class="tab-panel"></div>
     <div id="stats-panel-passing"   class="tab-panel"></div>

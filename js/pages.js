@@ -387,6 +387,8 @@ function getAdminSection(section) {
                 <div class="player-avatar">${getInitials(p.name)}</div>
                 <span style="flex:1;font-size:0.9rem"><strong>#${p.number}</strong> ${p.name}
                   <span style="color:var(--gray-500)">(${p.position})</span></span>
+                <button class="btn btn-ghost" style="font-size:0.72rem;padding:4px 10px"
+                  onclick="editPlayer(${p.id})">✏️</button>
                 <button class="btn btn-danger" style="font-size:0.72rem;padding:4px 10px"
                   onclick="deletePlayer(${p.id})">✕</button>
               </div>
@@ -727,4 +729,54 @@ function changePassword() {
   DB.setPassword(p);
   showToast('Password changed!');
   closeAdmin();
+}
+
+function editPlayer(id) {
+  const players = DB.getPlayers();
+  const p = players.find(p => p.id === id);
+  if (!p) return;
+
+  const content = document.getElementById('adminContent');
+  content.innerHTML = `
+    <div class="admin-modal">
+      <button class="btn btn-ghost" style="margin-bottom:16px;font-size:0.8rem"
+        onclick="document.getElementById('adminContent').innerHTML=getAdminSection('player')">← Back</button>
+      <h2>✏️ Edit Player</h2>
+      <div class="grid-2">
+        <div class="form-group"><label class="form-label">Name</label>
+          <input class="form-input" id="ep-name" value="${p.name}" /></div>
+        <div class="form-group"><label class="form-label">Number</label>
+          <input class="form-input" id="ep-num" value="${p.number || ''}" /></div>
+      </div>
+      <div class="form-group"><label class="form-label">Position</label>
+        <select class="form-select" id="ep-pos">
+          <option value="QB" ${p.position === 'QB' ? 'selected' : ''}>Quarterback (QB)</option>
+          <option value="WR" ${p.position === 'WR' ? 'selected' : ''}>Wide Receiver (WR)</option>
+          <option value="RB" ${p.position === 'RB' ? 'selected' : ''}>Running Back (RB)</option>
+          <option value="DB" ${p.position === 'DB' ? 'selected' : ''}>Defensive Back (DB)</option>
+          <option value="ATH" ${p.position === 'ATH' ? 'selected' : ''}>Athlete</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveEditPlayer(${id})">Save Changes</button>
+        <button class="btn btn-ghost" onclick="closeAdmin()">Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+function saveEditPlayer(id) {
+  const name     = document.getElementById('ep-name')?.value.trim();
+  const number   = document.getElementById('ep-num')?.value.trim();
+  const position = document.getElementById('ep-pos')?.value;
+  if (!name) { showToast('Enter a name', 'error'); return; }
+
+  const players = DB.getPlayers();
+  const idx = players.findIndex(p => p.id === id);
+  if (idx === -1) return;
+
+  players[idx] = { ...players[idx], name, number, position };
+  DB.savePlayers(players);
+  showToast('Player updated!');
+  document.getElementById('adminContent').innerHTML = getAdminSection('player');
 }

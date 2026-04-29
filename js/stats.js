@@ -7,7 +7,7 @@ let currentSeason = 'all';
 function renderStats() {
   renderSeasonSelector();
   aggregateStats();
-  renderStatsTab('receiving');
+  renderStatsTab('players');
 }
 
 function renderSeasonSelector() {
@@ -117,7 +117,7 @@ function renderStatsTab(tab) {
   const panel = document.getElementById('stats-panel-' + tab);
   if (!panel) return;
   panel.classList.add('active');
-
+  if (tab === 'players') { renderPlayersTab(panel); return; }
   if (tab === 'draft') { renderDraftStats(panel); return; }
 
   const sorted = (fn) => [...agg].sort((a, b) => fn(b) - fn(a));
@@ -575,6 +575,81 @@ function profileSelectSeason(playerId, season) {
           ${statBlock('Pick-2pts', s.pick2)}
         </div>
       </div>
+    </div>
+  `;
+}
+
+function renderPlayersTab(panel) {
+  const players   = DB.getPlayers();
+  const history   = DB.getHistory();
+  const draftData = DB.getDraftStats();
+
+  if (!players.length) {
+    panel.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">👤</div>
+        <p>No players yet. Add them via the admin panel.</p>
+      </div>`;
+    return;
+  }
+
+  // Quick stats per player
+  const quickStats = {};
+  players.forEach(p => {
+    quickStats[p.id] = { games: 0, td: 0, rec: 0, tackles: 0, passYds: 0 };
+  });
+
+  history.forEach(match => {
+    if (!match.playerStats) return;
+    Object.entries(match.playerStats).forEach(([pid, ps]) => {
+      pid = Number(pid);
+      if (!quickStats[pid]) return;
+      quickStats[pid].games++;
+      quickStats[pid].td      += (ps.recTd || 0) + (ps.rushTd || 0) + (ps.passTd || 0);
+      quickStats[pid].rec     += ps.receptions || 0;
+      quickStats[pid].tackles += ps.tackles    || 0;
+      quickStats[pid].passYds += ps.passYds    || 0;
+    });
+  });
+
+  panel.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+      ${players.map(p => {
+        const qs = quickStats[p.id] || {};
+        const draft = draftData.find(d => d.playerId === p.id);
+        return `
+          <div onclick="openPlayerProfile(${p.id})"
+            style="background:var(--bg-card);border:1px solid rgba(12,64,112,0.3);border-radius:var(--radius);padding:20px;cursor:pointer;transition:var(--transition);text-align:center"
+            onmouseover="this.style.borderColor='var(--blue-mid)';this.style.transform='translateY(-2px)'"
+            onmouseout="this.style.borderColor='rgba(12,64,112,0.3)';this.style.transform='translateY(0)'">
+            <div class="player-avatar" style="width:52px;height:52px;font-size:1.2rem;margin:0 auto 12px">
+              ${getInitials(p.name)}
+            </div>
+            <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:800;margin-bottom:2px">${p.name}</div>
+            <div style="font-size:0.8rem;color:var(--blue-light);margin-bottom:12px">#${p.number || '—'} · ${p.position}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+              <div style="background:var(--bg-card2);border-radius:6px;padding:6px">
+                <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--blue-light)">${qs.games || 0}</div>
+                <div style="font-size:0.68rem;color:var(--gray-500)">Games</div>
+              </div>
+              <div style="background:var(--bg-card2);border-radius:6px;padding:6px">
+                <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--blue-light)">${qs.td || 0}</div>
+                <div style="font-size:0.68rem;color:var(--gray-500)">TDs</div>
+              </div>
+              <div style="background:var(--bg-card2);border-radius:6px;padding:6px">
+                <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--blue-light)">${qs.rec || 0}</div>
+                <div style="font-size:0.68rem;color:var(--gray-500)">Receptions</div>
+              </div>
+              <div style="background:var(--bg-card2);border-radius:6px;padding:6px">
+                <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--blue-light)">${qs.tackles || 0}</div>
+                <div style="font-size:0.68rem;color:var(--gray-500)">Tackles</div>
+              </div>
+            </div>
+            ${draft ? `<div style="font-size:0.72rem;color:var(--green);background:rgba(76,175,80,0.1);border-radius:20px;padding:3px 10px;display:inline-block">✓ Draft evaluated</div>` : `<div style="font-size:0.72rem;color:var(--gray-500);background:rgba(255,255,255,0.05);border-radius:20px;padding:3px 10px;display:inline-block">No draft data</div>`}
+            <div style="font-size:0.72rem;color:var(--blue-light);margin-top:8px">Tap to view full profile →</div>
+          </div>
+        `;
+      }).join('')}
     </div>
   `;
 }
