@@ -51,6 +51,10 @@ const DB = {
   getGamePlans() { return this.getOrDefault('gamePlans', []); },
   saveGamePlans(g) { this.set('gamePlans', g); },
 
+  // Playbook Sections
+  getPlaybookSections() { return this.getOrDefault('playbookSections', []); },
+  savePlaybookSections(s) { this.set('playbookSections', s); },
+
   // Playbook
   getPlaybook() { return this.getOrDefault('playbook', []); },
   savePlaybook(p) { this.set('playbook', p); },

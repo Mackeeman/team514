@@ -20,7 +20,7 @@ const db  = getDatabase(app);
 
 const KEYS = [
   'players', 'matches', 'history', 'trainings',
-  'strategies', 'playbookUrl', 'media', 'draftStats', 'gamePlans', 'playbook'
+  'strategies', 'playbookUrl', 'media', 'draftStats', 'gamePlans', 'playbook', 'playbookSections'
 ];
 
 // Flag to prevent write loops

@@ -99,7 +99,8 @@ function renderHistory() {
 // ═══════════════════════════════════════════════════
 
 function renderStrategy() {
-  renderStrategyTab('defense');
+  const activeTab = document.querySelector('#strategy-tabs .tab-btn.active')?.dataset.tab || 'defense';
+  renderStrategyTab(activeTab);
 }
 
 function renderStrategyTab(tab) {
@@ -145,16 +146,13 @@ function renderStrategyTab(tab) {
 
 function renderPlaybook() {
   const playbook  = DB.getPlaybook();
+  const savedSections = DB.getPlaybookSections();
   const container = document.getElementById('strategy-panel-playbook');
   if (!container) return;
 
-  // Group plays by section
-  const sections = {};
-  playbook.forEach(play => {
-    const sec = play.section || 'General';
-    if (!sections[sec]) sections[sec] = [];
-    sections[sec].push(play);
-  });
+  // Merge saved sections with sections from plays
+  const playSections = [...new Set(playbook.map(p => p.section).filter(Boolean))];
+  const allSections  = [...new Set([...savedSections, ...playSections])];
 
   const addBtns = `
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
@@ -165,51 +163,60 @@ function renderPlaybook() {
     </div>
   `;
 
-  if (!playbook.length) {
+  if (!allSections.length) {
     container.innerHTML = `
       ${addBtns}
       <div class="empty-state">
         <div class="empty-icon">📖</div>
-        <p>No plays yet. Start building your playbook!</p>
+        <p>No plays yet. Start by adding a section!</p>
       </div>`;
     return;
   }
 
   container.innerHTML = `
     ${addBtns}
-    ${Object.entries(sections).map(([sectionName, plays]) => `
-      <div style="margin-bottom:28px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div class="section-title" style="font-size:1.1rem;margin-bottom:0;flex:1">📋 ${sectionName}</div>
-          <button class="btn btn-ghost" style="font-size:0.72rem;padding:4px 10px"
-            onclick="requireAdmin(() => openSectionForm('${sectionName}'))">✏️ Rename</button>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
-          ${plays.map(play => `
-            <div style="background:var(--bg-card);border:1px solid rgba(12,64,112,0.3);border-radius:var(--radius);padding:16px;transition:var(--transition)"
-              onmouseover="this.style.borderColor='var(--blue-mid)'"
-              onmouseout="this.style.borderColor='rgba(12,64,112,0.3)'">
-              <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:8px">
-                <div style="font-family:var(--font-display);font-size:1rem;font-weight:800">${play.name}</div>
-                <button class="btn btn-ghost" style="font-size:0.68rem;padding:3px 8px;flex-shrink:0"
-                  onclick="requireAdmin(() => openPlayForm(${play.id}))">✏️</button>
-              </div>
-              ${play.objective ? `
-                <div style="font-size:0.75rem;color:var(--blue-light);font-family:var(--font-display);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">🎯 Objective</div>
-                <div style="font-size:0.82rem;color:var(--white);margin-bottom:8px">${play.objective}</div>
-              ` : ''}
-              ${play.description ? `
-                <div style="font-size:0.75rem;color:var(--blue-light);font-family:var(--font-display);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">📝 Description</div>
-                <div style="font-size:0.82rem;color:var(--gray-300);line-height:1.5;white-space:pre-line;margin-bottom:8px">${play.description}</div>
-              ` : ''}
-              ${play.imageUrl ? `
-                <img src="${play.imageUrl}" style="width:100%;border-radius:8px;margin-top:8px" />
-              ` : ''}
+    ${allSections.map(sectionName => {
+      const plays = playbook.filter(p => p.section === sectionName);
+      return `
+        <div style="margin-bottom:28px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div class="section-title" style="font-size:1.1rem;margin-bottom:0;flex:1">📋 ${sectionName}</div>
+            <button class="btn btn-ghost" style="font-size:0.72rem;padding:4px 10px"
+              onclick="requireAdmin(() => openSectionForm('${sectionName}'))">✏️</button>
+          </div>
+          ${plays.length ? `
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+              ${plays.map(play => `
+                <div style="background:var(--bg-card);border:1px solid rgba(12,64,112,0.3);border-radius:var(--radius);padding:16px;transition:var(--transition)"
+                  onmouseover="this.style.borderColor='var(--blue-mid)'"
+                  onmouseout="this.style.borderColor='rgba(12,64,112,0.3)'">
+                  <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:8px">
+                    <div style="font-family:var(--font-display);font-size:1rem;font-weight:800">${play.name}</div>
+                    <button class="btn btn-ghost" style="font-size:0.68rem;padding:3px 8px;flex-shrink:0"
+                      onclick="requireAdmin(() => openPlayForm(${play.id}))">✏️</button>
+                  </div>
+                  ${play.objective ? `
+                    <div style="font-size:0.75rem;color:var(--blue-light);font-family:var(--font-display);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">🎯 Objective</div>
+                    <div style="font-size:0.82rem;color:var(--white);margin-bottom:8px">${play.objective}</div>
+                  ` : ''}
+                  ${play.description ? `
+                    <div style="font-size:0.75rem;color:var(--blue-light);font-family:var(--font-display);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">📝 Description</div>
+                    <div style="font-size:0.82rem;color:var(--gray-300);line-height:1.5;white-space:pre-line;margin-bottom:8px">${play.description}</div>
+                  ` : ''}
+                  ${play.imageUrl ? `
+                    <img src="${play.imageUrl}" style="width:100%;border-radius:8px;margin-top:8px" />
+                  ` : ''}
+                </div>
+              `).join('')}
             </div>
-          `).join('')}
+          ` : `
+            <div style="color:var(--gray-500);font-size:0.85rem;padding:16px;background:var(--bg-card);border-radius:var(--radius);border:1px dashed rgba(12,64,112,0.3)">
+              No plays in this section yet. Click "+ Add Play" and select this section.
+            </div>
+          `}
         </div>
-      </div>
-    `).join('')}
+      `;
+    }).join('')}
   `;
 }
 
@@ -1220,16 +1227,23 @@ function saveSection(oldName) {
   if (!newName) { showToast('Enter a section name', 'error'); return; }
 
   const playbook = DB.getPlaybook();
+  const sections = DB.getPlaybookSections();
 
   if (oldName) {
-    // Rename — update all plays in this section
+    // Rename in plays
     playbook.forEach(play => {
       if (play.section === oldName) play.section = newName;
     });
+    DB.savePlaybook(playbook);
+    // Rename in sections list
+    const idx = sections.indexOf(oldName);
+    if (idx !== -1) sections[idx] = newName;
+  } else {
+    // Add new section
+    if (!sections.includes(newName)) sections.push(newName);
   }
-  // If new section, nothing to do yet — plays will be assigned to it
 
-  DB.savePlaybook(playbook);
+  DB.savePlaybookSections(sections);
   showToast(oldName ? 'Section renamed!' : 'Section added!');
   closeAdmin();
   renderPlaybook();
@@ -1238,7 +1252,9 @@ function saveSection(oldName) {
 function deleteSection(sectionName) {
   if (!confirm(`Delete section "${sectionName}" and all its plays?`)) return;
   const playbook = DB.getPlaybook().filter(p => p.section !== sectionName);
+  const sections = DB.getPlaybookSections().filter(s => s !== sectionName);
   DB.savePlaybook(playbook);
+  DB.savePlaybookSections(sections);
   showToast('Section deleted');
   closeAdmin();
   renderPlaybook();
