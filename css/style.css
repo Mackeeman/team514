@@ -195,6 +195,7 @@ body {
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
 
 /* ── STAT HIGHLIGHT CARDS ── */
 .stat-highlight {
@@ -753,7 +754,6 @@ body {
   .match-times { text-align: left; width: 100%; border-top: 1px solid rgba(12,64,112,0.2); padding-top: 10px; }
   .stats-table { font-size: 0.78rem; }
   .stats-table thead th, .stats-table tbody td { padding: 8px 8px; }
-  .grid-5 { grid-template-columns: 1fr 1fr; }
 }
 
 /* ── SCROLLBAR ── */
@@ -780,8 +780,6 @@ body {
 
 .season-btn:hover { color: var(--white); border-color: var(--blue-mid); }
 .season-btn.active { background: var(--blue-dark); color: var(--white); border-color: var(--blue-mid); }
-
-.grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
 
 /* ── BOTTOM NAV ── */
 .bottom-nav {
