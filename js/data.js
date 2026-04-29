@@ -51,6 +51,10 @@ const DB = {
   getGamePlans() { return this.getOrDefault('gamePlans', []); },
   saveGamePlans(g) { this.set('gamePlans', g); },
 
+  // Playbook
+  getPlaybook() { return this.getOrDefault('playbook', []); },
+  savePlaybook(p) { this.set('playbook', p); },
+
   // Admin password
   getPassword() { return this.getOrDefault('adminPass', '514team'); },
   setPassword(p) { this.set('adminPass', p); },

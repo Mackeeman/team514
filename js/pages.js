@@ -144,25 +144,73 @@ function renderStrategyTab(tab) {
 }
 
 function renderPlaybook() {
-  const url       = DB.getPlaybookUrl();
+  const playbook  = DB.getPlaybook();
   const container = document.getElementById('strategy-panel-playbook');
   if (!container) return;
 
-  if (!url) {
+  // Group plays by section
+  const sections = {};
+  playbook.forEach(play => {
+    const sec = play.section || 'General';
+    if (!sections[sec]) sections[sec] = [];
+    sections[sec].push(play);
+  });
+
+  const addBtns = `
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+      <button class="btn btn-primary" style="font-size:0.78rem;padding:7px 14px"
+        onclick="requireAdmin(() => openPlayForm())">+ Add Play</button>
+      <button class="btn btn-ghost" style="font-size:0.78rem;padding:7px 14px"
+        onclick="requireAdmin(() => openSectionForm())">+ Add Section</button>
+    </div>
+  `;
+
+  if (!playbook.length) {
     container.innerHTML = `
-      <div class="playbook-frame">
-        <span style="font-size:2rem">📖</span>
-        <p>No playbook configured.</p>
-        <button class="btn btn-primary" style="margin-top:8px"
-          onclick="requireAdmin(() => openAdminModal('playbook'))">Add playbook link</button>
+      ${addBtns}
+      <div class="empty-state">
+        <div class="empty-icon">📖</div>
+        <p>No plays yet. Start building your playbook!</p>
       </div>`;
     return;
   }
 
   container.innerHTML = `
-    <iframe src="${url}"
-      style="width:100%;height:600px;border:none;border-radius:var(--radius);background:var(--bg-card2)"
-      allowfullscreen></iframe>`;
+    ${addBtns}
+    ${Object.entries(sections).map(([sectionName, plays]) => `
+      <div style="margin-bottom:28px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="section-title" style="font-size:1.1rem;margin-bottom:0;flex:1">📋 ${sectionName}</div>
+          <button class="btn btn-ghost" style="font-size:0.72rem;padding:4px 10px"
+            onclick="requireAdmin(() => openSectionForm('${sectionName}'))">✏️ Rename</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+          ${plays.map(play => `
+            <div style="background:var(--bg-card);border:1px solid rgba(12,64,112,0.3);border-radius:var(--radius);padding:16px;transition:var(--transition)"
+              onmouseover="this.style.borderColor='var(--blue-mid)'"
+              onmouseout="this.style.borderColor='rgba(12,64,112,0.3)'">
+              <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:8px">
+                <div style="font-family:var(--font-display);font-size:1rem;font-weight:800">${play.name}</div>
+                <button class="btn btn-ghost" style="font-size:0.68rem;padding:3px 8px;flex-shrink:0"
+                  onclick="requireAdmin(() => openPlayForm(${play.id}))">✏️</button>
+              </div>
+              ${play.objective ? `
+                <div style="font-size:0.75rem;color:var(--blue-light);font-family:var(--font-display);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">🎯 Objective</div>
+                <div style="font-size:0.82rem;color:var(--white);margin-bottom:8px">${play.objective}</div>
+              ` : ''}
+              ${play.description ? `
+                <div style="font-size:0.75rem;color:var(--blue-light);font-family:var(--font-display);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">📝 Description</div>
+                <div style="font-size:0.82rem;color:var(--gray-300);line-height:1.5;white-space:pre-line;margin-bottom:8px">${play.description}</div>
+              ` : ''}
+              ${play.imageUrl ? `
+                <img src="${play.imageUrl}" style="width:100%;border-radius:8px;margin-top:8px" />
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `;
 }
 
 function deleteStrategy(id) {
@@ -1114,4 +1162,158 @@ function deleteGamePlan(id) {
   showToast('Game Plan deleted');
   closeAdmin();
   renderGamePlan();
+}
+
+// ═══════════════════════════════════════════════════
+//  PLAYBOOK
+// ═══════════════════════════════════════════════════
+
+function openSectionForm(existingName) {
+  const overlay = document.getElementById('adminOverlay');
+  const content = document.getElementById('adminContent');
+  overlay.classList.add('open');
+
+  // Get existing sections
+  const playbook  = DB.getPlaybook();
+  const sections  = [...new Set(playbook.map(p => p.section || 'General'))];
+
+  content.innerHTML = `
+    <div class="admin-modal">
+      <button class="btn btn-ghost" style="margin-bottom:16px;font-size:0.8rem"
+        onclick="closeAdmin()">← Back</button>
+      <h2>📋 ${existingName ? 'Rename Section' : 'Add Section'}</h2>
+      ${existingName ? `
+        <div class="form-group">
+          <label class="form-label">Current Name</label>
+          <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--blue-light)">${existingName}</div>
+        </div>
+      ` : ''}
+      <div class="form-group">
+        <label class="form-label">${existingName ? 'New Name' : 'Section Name'}</label>
+        <input class="form-input" id="sec-name" value="${existingName || ''}" placeholder="e.g. Short Routes, Red Zone..." />
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveSection('${existingName || ''}')">
+          ${existingName ? 'Rename' : 'Add Section'}
+        </button>
+        ${existingName ? `
+          <button class="btn btn-danger" onclick="deleteSection('${existingName}')">Delete Section</button>
+        ` : ''}
+        <button class="btn btn-ghost" onclick="closeAdmin()">Cancel</button>
+      </div>
+      <div style="margin-top:20px">
+        <div class="section-title" style="font-size:1rem">Existing Sections</div>
+        ${sections.map(s => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(12,64,112,0.2)">
+            <span style="font-size:0.9rem">📋 ${s}</span>
+            <button class="btn btn-ghost" style="font-size:0.72rem;padding:4px 10px"
+              onclick="openSectionForm('${s}')">✏️</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function saveSection(oldName) {
+  const newName = document.getElementById('sec-name')?.value.trim();
+  if (!newName) { showToast('Enter a section name', 'error'); return; }
+
+  const playbook = DB.getPlaybook();
+
+  if (oldName) {
+    // Rename — update all plays in this section
+    playbook.forEach(play => {
+      if (play.section === oldName) play.section = newName;
+    });
+  }
+  // If new section, nothing to do yet — plays will be assigned to it
+
+  DB.savePlaybook(playbook);
+  showToast(oldName ? 'Section renamed!' : 'Section added!');
+  closeAdmin();
+  renderPlaybook();
+}
+
+function deleteSection(sectionName) {
+  if (!confirm(`Delete section "${sectionName}" and all its plays?`)) return;
+  const playbook = DB.getPlaybook().filter(p => p.section !== sectionName);
+  DB.savePlaybook(playbook);
+  showToast('Section deleted');
+  closeAdmin();
+  renderPlaybook();
+}
+
+function openPlayForm(id) {
+  const existing = id ? DB.getPlaybook().find(p => p.id === id) : null;
+  const sections = [...new Set(DB.getPlaybook().map(p => p.section || 'General'))];
+  const overlay  = document.getElementById('adminOverlay');
+  const content  = document.getElementById('adminContent');
+  overlay.classList.add('open');
+
+  content.innerHTML = `
+    <div class="admin-modal">
+      <button class="btn btn-ghost" style="margin-bottom:16px;font-size:0.8rem"
+        onclick="closeAdmin()">← Back</button>
+      <h2>${existing ? '✏️ Edit Play' : '🏈 Add Play'}</h2>
+      <div class="form-group"><label class="form-label">Play Name</label>
+        <input class="form-input" id="pl-name" value="${existing?.name || ''}" placeholder="e.g. Slant & Go" /></div>
+      <div class="form-group"><label class="form-label">Section</label>
+        <select class="form-select" id="pl-section">
+          ${sections.map(s => `
+            <option value="${s}" ${existing?.section === s ? 'selected' : ''}>${s}</option>
+          `).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">🎯 Objective</label>
+        <input class="form-input" id="pl-objective" value="${existing?.objective || ''}" placeholder="e.g. Beat man coverage deep" /></div>
+      <div class="form-group"><label class="form-label">📝 Description</label>
+        <textarea class="form-textarea" id="pl-desc" style="min-height:100px" placeholder="Explain the play, routes, timing...">${existing?.description || ''}</textarea></div>
+      <div class="form-group"><label class="form-label">🖼️ Image URL (optional)</label>
+        <input class="form-input" id="pl-img" value="${existing?.imageUrl || ''}" placeholder="https://i.imgur.com/..." />
+        <p style="font-size:0.75rem;color:var(--gray-500);margin-top:4px">Upload to <a href="https://imgur.com" target="_blank" style="color:var(--blue-light)">imgur.com</a> and paste the direct link.</p>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="savePlay(${id || 'null'})">
+          ${existing ? 'Save Changes' : 'Add Play'}
+        </button>
+        ${existing ? `<button class="btn btn-danger" onclick="deletePlay(${id})">Delete</button>` : ''}
+        <button class="btn btn-ghost" onclick="closeAdmin()">Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+function savePlay(id) {
+  const name      = document.getElementById('pl-name')?.value.trim();
+  const section   = document.getElementById('pl-section')?.value;
+  const objective = document.getElementById('pl-objective')?.value.trim();
+  const desc      = document.getElementById('pl-desc')?.value.trim();
+  const imageUrl  = document.getElementById('pl-img')?.value.trim();
+  if (!name) { showToast('Enter a play name', 'error'); return; }
+  if (!section) { showToast('Select a section', 'error'); return; }
+
+  const playbook = DB.getPlaybook();
+
+  if (id) {
+    const idx = playbook.findIndex(p => p.id === id);
+    if (idx !== -1) {
+      playbook[idx] = { ...playbook[idx], name, section, objective, description: desc, imageUrl };
+    }
+  } else {
+    playbook.push({ id: Date.now(), name, section, objective, description: desc, imageUrl });
+  }
+
+  DB.savePlaybook(playbook);
+  showToast(id ? 'Play updated!' : 'Play added!');
+  closeAdmin();
+  renderPlaybook();
+}
+
+function deletePlay(id) {
+  if (!confirm('Delete this play?')) return;
+  DB.savePlaybook(DB.getPlaybook().filter(p => p.id !== id));
+  showToast('Play deleted');
+  closeAdmin();
+  renderPlaybook();
 }
