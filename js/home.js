@@ -6,6 +6,7 @@ function renderHome() {
   renderLeaders();
   renderUpcomingMatches();
   renderTrainings();
+  renderLatestGamePlan();
 }
 
 function renderLeaders() {
@@ -149,4 +150,51 @@ function renderTrainings() {
       </div>
     `;
   }).join('');
+}
+
+function renderLatestGamePlan() {
+  const gamePlans = DB.getGamePlans().sort((a, b) => b.id - a.id);
+  const container = document.getElementById('latest-gameplan');
+  if (!container) return;
+
+  if (!gamePlans.length) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  const gp = gamePlans[0];
+
+  container.innerHTML = `
+    <div style="background:var(--bg-card);border:1px solid rgba(12,64,112,0.4);border-radius:var(--radius);padding:20px;cursor:pointer"
+      onclick="showPage('strategy')">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:800">
+            🎯 Game Plan — vs ${gp.opponent || 'TBD'}
+          </div>
+          <div style="font-size:0.8rem;color:var(--gray-300)">${gp.date || ''} ${gp.season ? `· ${gp.season}` : ''}</div>
+        </div>
+        <span style="font-size:0.78rem;color:var(--blue-light)">View Strategy →</span>
+      </div>
+      ${gp.offense ? `
+        <div style="margin-bottom:10px">
+          <div style="font-family:var(--font-display);font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue-light);margin-bottom:4px">⚡ Offense</div>
+          <div style="font-size:0.85rem;color:var(--gray-300);line-height:1.5;white-space:pre-line">${gp.offense}</div>
+        </div>
+      ` : ''}
+      ${gp.defense ? `
+        <div style="margin-bottom:10px">
+          <div style="font-family:var(--font-display);font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue-light);margin-bottom:4px">🛡️ Defense</div>
+          <div style="font-size:0.85rem;color:var(--gray-300);line-height:1.5;white-space:pre-line">${gp.defense}</div>
+        </div>
+      ` : ''}
+      ${gp.mindset ? `
+        <div>
+          <div style="font-family:var(--font-display);font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue-light);margin-bottom:4px">🧠 Mindset</div>
+          <div style="font-size:0.85rem;color:var(--gray-300);line-height:1.5;white-space:pre-line">${gp.mindset}</div>
+        </div>
+      ` : ''}
+    </div>
+  `;
 }

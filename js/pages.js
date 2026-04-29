@@ -111,6 +111,7 @@ function renderStrategyTab(tab) {
   });
 
   if (tab === 'playbook') { renderPlaybook(); return; }
+  if (tab === 'gameplan') { renderGamePlan(); return; }
 
   const strategies = DB.getStrategies().filter(s => s.type === tab);
   const container  = document.getElementById('strategy-panel-' + tab);
@@ -129,10 +130,14 @@ function renderStrategyTab(tab) {
     <div class="strategy-card fade-in">
       <div class="strategy-name">
         ${s.name}
-        <button class="btn btn-danger" style="font-size:0.75rem;padding:4px 10px"
-          onclick="requireAdmin(() => deleteStrategy(${s.id}))">Delete</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px"
+            onclick="requireAdmin(() => editStrategy(${s.id}))">✏️</button>
+          <button class="btn btn-danger" style="font-size:0.75rem;padding:4px 10px"
+            onclick="requireAdmin(() => deleteStrategy(${s.id}))">Delete</button>
+        </div>
       </div>
-      <div class="strategy-desc">${s.description || '<em>No description</em>'}</div>
+      <div class="strategy-desc">${s.description ? s.description.replace(/\n/g, '<br>') : '<em>No description</em>'}</div>
       ${s.imageUrl ? `<img src="${s.imageUrl}" style="max-width:100%;border-radius:8px;margin-top:12px" />` : ''}
     </div>
   `).join('');
@@ -913,4 +918,200 @@ function deleteResult(id) {
   DB.saveHistory(DB.getHistory().filter(m => m.id !== id));
   showToast('Match deleted');
   closeAdmin();
+}
+
+function editStrategy(id) {
+  const strategy = DB.getStrategies().find(s => s.id === id);
+  if (!strategy) return;
+
+  const overlay = document.getElementById('adminOverlay');
+  const content = document.getElementById('adminContent');
+  overlay.classList.add('open');
+
+  content.innerHTML = `
+    <div class="admin-modal">
+      <button class="btn btn-ghost" style="margin-bottom:16px;font-size:0.8rem"
+        onclick="closeAdmin()">← Back</button>
+      <h2>✏️ Edit Strategy</h2>
+      <div class="form-group"><label class="form-label">Name</label>
+        <input class="form-input" id="es-name" value="${strategy.name}" /></div>
+      <div class="form-group"><label class="form-label">Type</label>
+        <select class="form-select" id="es-type">
+          <option value="defense" ${strategy.type === 'defense' ? 'selected' : ''}>Defense</option>
+          <option value="offense" ${strategy.type === 'offense' ? 'selected' : ''}>Offense</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label>
+        <textarea class="form-textarea" id="es-desc">${strategy.description || ''}</textarea></div>
+      <div class="form-group"><label class="form-label">Image URL (optional)</label>
+        <input class="form-input" id="es-img" value="${strategy.imageUrl || ''}" /></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveEditStrategy(${id})">Save Changes</button>
+        <button class="btn btn-ghost" onclick="closeAdmin()">Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+function saveEditStrategy(id) {
+  const name        = document.getElementById('es-name')?.value.trim();
+  const type        = document.getElementById('es-type')?.value;
+  const description = document.getElementById('es-desc')?.value.trim();
+  const imageUrl    = document.getElementById('es-img')?.value.trim();
+  if (!name) { showToast('Enter a name', 'error'); return; }
+
+  const strategies = DB.getStrategies();
+  const idx = strategies.findIndex(s => s.id === id);
+  if (idx === -1) return;
+
+  strategies[idx] = { ...strategies[idx], name, type, description, imageUrl };
+  DB.saveStrategies(strategies);
+  showToast('Strategy updated!');
+  closeAdmin();
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME PLAN
+// ═══════════════════════════════════════════════════
+
+function renderGamePlan() {
+  const gamePlans = DB.getGamePlans().sort((a, b) => b.id - a.id);
+  const container = document.getElementById('strategy-panel-gameplan');
+  if (!container) return;
+
+  const addBtn = DB.isAdminSession() ? `
+    <button class="btn btn-primary" style="font-size:0.78rem;padding:7px 14px;margin-bottom:20px"
+      onclick="openGamePlanForm()">+ New Game Plan</button>
+  ` : `
+    <button class="btn btn-primary" style="font-size:0.78rem;padding:7px 14px;margin-bottom:20px"
+      onclick="requireAdmin(openGamePlanForm)">+ New Game Plan</button>
+  `;
+
+  if (!gamePlans.length) {
+    container.innerHTML = `
+      ${addBtn}
+      <div class="empty-state">
+        <div class="empty-icon">🎯</div>
+        <p>No game plans yet. Create one before your next match!</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    ${addBtn}
+    ${gamePlans.map(gp => `
+      <div style="background:var(--bg-card);border:1px solid rgba(12,64,112,0.3);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+          <div>
+            <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:800">
+              🎯 vs ${gp.opponent || 'TBD'}
+            </div>
+            <div style="font-size:0.8rem;color:var(--gray-300)">
+              ${gp.date || ''} ${gp.season ? `· ${gp.season}` : ''}
+            </div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px"
+            onclick="requireAdmin(() => openGamePlanForm(${gp.id}))">✏️ Edit</button>
+        </div>
+        ${gp.offense ? `
+          <div style="margin-bottom:14px">
+            <div style="font-family:var(--font-display);font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue-light);margin-bottom:6px">⚡ Offense</div>
+            <div style="font-size:0.88rem;color:var(--gray-300);line-height:1.6;white-space:pre-line">${gp.offense}</div>
+          </div>
+        ` : ''}
+        ${gp.defense ? `
+          <div style="margin-bottom:14px">
+            <div style="font-family:var(--font-display);font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue-light);margin-bottom:6px">🛡️ Defense</div>
+            <div style="font-size:0.88rem;color:var(--gray-300);line-height:1.6;white-space:pre-line">${gp.defense}</div>
+          </div>
+        ` : ''}
+        ${gp.mindset ? `
+          <div style="margin-bottom:14px">
+            <div style="font-family:var(--font-display);font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue-light);margin-bottom:6px">🧠 Mindset</div>
+            <div style="font-size:0.88rem;color:var(--gray-300);line-height:1.6;white-space:pre-line">${gp.mindset}</div>
+          </div>
+        ` : ''}
+        ${gp.review ? `
+          <div style="border-top:1px solid rgba(12,64,112,0.3);padding-top:14px;margin-top:4px">
+            <div style="font-family:var(--font-display);font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:6px">📋 Post-Game Review</div>
+            <div style="font-size:0.88rem;color:var(--gray-300);line-height:1.6;white-space:pre-line">${gp.review}</div>
+          </div>
+        ` : ''}
+      </div>
+    `).join('')}
+  `;
+}
+
+function openGamePlanForm(id) {
+  const existing = id ? DB.getGamePlans().find(g => g.id === id) : null;
+  const overlay  = document.getElementById('adminOverlay');
+  const content  = document.getElementById('adminContent');
+  overlay.classList.add('open');
+
+  content.innerHTML = `
+    <div class="admin-modal">
+      <button class="btn btn-ghost" style="margin-bottom:16px;font-size:0.8rem"
+        onclick="closeAdmin()">← Back</button>
+      <h2>${existing ? '✏️ Edit Game Plan' : '🎯 New Game Plan'}</h2>
+      <div class="grid-2">
+        <div class="form-group"><label class="form-label">Opponent</label>
+          <input class="form-input" id="gp-opp" value="${existing?.opponent || ''}" placeholder="Team name" /></div>
+        <div class="form-group"><label class="form-label">Date</label>
+          <input class="form-input" type="date" id="gp-date" value="${existing?.date || ''}" /></div>
+      </div>
+      <div class="form-group"><label class="form-label">Season</label>
+        <input class="form-input" id="gp-season" value="${existing?.season || ''}" placeholder="e.g. Spring 2025" /></div>
+      <div class="form-group"><label class="form-label">⚡ Offense</label>
+        <textarea class="form-textarea" id="gp-offense" style="min-height:100px" placeholder="Offensive strategy and plays to use...">${existing?.offense || ''}</textarea></div>
+      <div class="form-group"><label class="form-label">🛡️ Defense</label>
+        <textarea class="form-textarea" id="gp-defense" style="min-height:100px" placeholder="Defensive strategy and coverages...">${existing?.defense || ''}</textarea></div>
+      <div class="form-group"><label class="form-label">🧠 Mindset</label>
+        <textarea class="form-textarea" id="gp-mindset" style="min-height:80px" placeholder="Team focus, key points, motivation...">${existing?.mindset || ''}</textarea></div>
+      <div class="form-group"><label class="form-label">📋 Post-Game Review <span style="color:var(--gray-500);font-weight:400">(fill after the match)</span></label>
+        <textarea class="form-textarea" id="gp-review" style="min-height:100px" placeholder="What worked, what didn't, key takeaways...">${existing?.review || ''}</textarea></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveGamePlan(${id || 'null'})">
+          ${existing ? 'Save Changes' : 'Publish Game Plan'}
+        </button>
+        ${existing ? `<button class="btn btn-danger" onclick="deleteGamePlan(${id})">Delete</button>` : ''}
+        <button class="btn btn-ghost" onclick="closeAdmin()">Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+function saveGamePlan(id) {
+  const opp     = document.getElementById('gp-opp')?.value.trim();
+  const date    = document.getElementById('gp-date')?.value;
+  const season  = document.getElementById('gp-season')?.value.trim();
+  const offense = document.getElementById('gp-offense')?.value.trim();
+  const defense = document.getElementById('gp-defense')?.value.trim();
+  const mindset = document.getElementById('gp-mindset')?.value.trim();
+  const review  = document.getElementById('gp-review')?.value.trim();
+
+  if (!opp) { showToast('Enter an opponent', 'error'); return; }
+
+  const gamePlans = DB.getGamePlans();
+
+  if (id) {
+    const idx = gamePlans.findIndex(g => g.id === id);
+    if (idx !== -1) {
+      gamePlans[idx] = { ...gamePlans[idx], opponent: opp, date, season, offense, defense, mindset, review };
+    }
+  } else {
+    gamePlans.push({ id: Date.now(), opponent: opp, date, season, offense, defense, mindset, review });
+  }
+
+  DB.saveGamePlans(gamePlans);
+  showToast(id ? 'Game Plan updated!' : 'Game Plan published!');
+  closeAdmin();
+  renderGamePlan();
+}
+
+function deleteGamePlan(id) {
+  if (!confirm('Delete this game plan permanently?')) return;
+  DB.saveGamePlans(DB.getGamePlans().filter(g => g.id !== id));
+  showToast('Game Plan deleted');
+  closeAdmin();
+  renderGamePlan();
 }

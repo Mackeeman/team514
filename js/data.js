@@ -47,6 +47,10 @@ const DB = {
   getDraftStats() { return this.getOrDefault('draftStats', []); },
   saveDraftStats(d) { this.set('draftStats', d); },
 
+  // Game Plans
+  getGamePlans() { return this.getOrDefault('gamePlans', []); },
+  saveGamePlans(g) { this.set('gamePlans', g); },
+
   // Admin password
   getPassword() { return this.getOrDefault('adminPass', '514team'); },
   setPassword(p) { this.set('adminPass', p); },
