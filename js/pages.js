@@ -432,14 +432,31 @@ function getAdminSection(section) {
             <div class="form-group"><label class="form-label">Number</label>
               <input class="form-input" id="ap-num" placeholder="7" /></div>
           </div>
-          <div class="form-group"><label class="form-label">Position</label>
-            <select class="form-select" id="ap-pos">
-              <option value="QB">Quarterback (QB)</option>
-              <option value="WR">Wide Receiver (WR)</option>
-              <option value="RB">Running Back (RB)</option>
-              <option value="DB">Defensive Back (DB)</option>
-              <option value="ATH">Athlete</option>
-            </select>
+          <div class="grid-2">
+            <div class="form-group"><label class="form-label">Primary Offensive Position</label>
+              <select class="form-select" id="ap-off1">
+                <option value="">— Select —</option>
+                ${['QB', 'WR', 'Slot', 'Center'].map(pos => `<option value="${pos}">${pos}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Backup Offensive Position <span style="color:var(--gray-500);font-weight:400">(optional)</span></label>
+              <select class="form-select" id="ap-off2">
+                <option value="">— None —</option>
+                ${['QB', 'WR', 'Slot', 'Center'].map(pos => `<option value="${pos}">${pos}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Primary Defensive Position</label>
+              <select class="form-select" id="ap-def1">
+                <option value="">— Select —</option>
+                ${['DB', 'CB', 'Rusher', 'Safety'].map(pos => `<option value="${pos}">${pos}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Backup Defensive Position <span style="color:var(--gray-500);font-weight:400">(optional)</span></label>
+              <select class="form-select" id="ap-def2">
+                <option value="">— None —</option>
+                ${['DB', 'CB', 'Rusher', 'Safety'].map(pos => `<option value="${pos}">${pos}</option>`).join('')}
+              </select>
+            </div>
           </div>
           <div class="btn-row">
             <button class="btn btn-primary" onclick="savePlayer()">Add Player</button>
@@ -449,8 +466,11 @@ function getAdminSection(section) {
             ${players.map(p => `
               <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(12,64,112,0.2)">
                 <div class="player-avatar">${getInitials(p.name)}</div>
-                <span style="flex:1;font-size:0.9rem"><strong>#${p.number}</strong> ${p.name}
-                  <span style="color:var(--gray-500)">(${p.position})</span></span>
+                <span style="flex:1;font-size:0.9rem"><strong>#${p.number || '—'}</strong> ${p.name}
+                  <span style="color:var(--gray-500)">
+                    (${p.offPos?.length ? p.offPos.join('/') : p.position || '—'} | ${p.defPos?.length ? p.defPos.join('/') : '—'})
+                  </span>
+                </span>
                 <button class="btn btn-ghost" style="font-size:0.72rem;padding:4px 10px"
                   onclick="editPlayer(${p.id})">✏️</button>
                 <button class="btn btn-danger" style="font-size:0.72rem;padding:4px 10px"
@@ -667,12 +687,20 @@ function saveResult() {
 }
 
 function savePlayer() {
-  const name     = document.getElementById('ap-name')?.value.trim();
-  const number   = document.getElementById('ap-num')?.value.trim();
-  const position = document.getElementById('ap-pos')?.value;
+  const name = document.getElementById('ap-name')?.value.trim();
+  const number = document.getElementById('ap-num')?.value.trim();
   if (!name) { showToast('Enter a name', 'error'); return; }
+
+  const off1 = document.getElementById('ap-off1')?.value;
+  const off2 = document.getElementById('ap-off2')?.value;
+  const def1 = document.getElementById('ap-def1')?.value;
+  const def2 = document.getElementById('ap-def2')?.value;
+
+  const offPos = [off1, off2].filter(Boolean);
+  const defPos = [def1, def2].filter(Boolean);
+
   const players = DB.getPlayers();
-  players.push({ id: Date.now(), name, number, position });
+  players.push({ id: Date.now(), name, number, offPos, defPos });
   DB.savePlayers(players);
   showToast('Player added!');
   document.getElementById('adminContent').innerHTML = getAdminSection('player');
@@ -812,14 +840,39 @@ function editPlayer(id) {
         <div class="form-group"><label class="form-label">Number</label>
           <input class="form-input" id="ep-num" value="${p.number || ''}" /></div>
       </div>
-      <div class="form-group"><label class="form-label">Position</label>
-        <select class="form-select" id="ep-pos">
-          <option value="QB" ${p.position === 'QB' ? 'selected' : ''}>Quarterback (QB)</option>
-          <option value="WR" ${p.position === 'WR' ? 'selected' : ''}>Wide Receiver (WR)</option>
-          <option value="RB" ${p.position === 'RB' ? 'selected' : ''}>Running Back (RB)</option>
-          <option value="DB" ${p.position === 'DB' ? 'selected' : ''}>Defensive Back (DB)</option>
-          <option value="ATH" ${p.position === 'ATH' ? 'selected' : ''}>Athlete</option>
-        </select>
+      <div class="grid-2">
+        <div class="form-group"><label class="form-label">Primary Offensive Position</label>
+          <select class="form-select" id="ep-off1">
+            <option value="">— Select —</option>
+            ${['QB', 'WR', 'Slot', 'Center'].map(pos => `
+              <option value="${pos}" ${(p.offPos?.[0] === pos || p.position === pos) ? 'selected' : ''}>${pos}</option>
+            `).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Backup Offensive Position <span style="color:var(--gray-500);font-weight:400">(optional)</span></label>
+          <select class="form-select" id="ep-off2">
+            <option value="">— None —</option>
+            ${['QB', 'WR', 'Slot', 'Center'].map(pos => `
+              <option value="${pos}" ${p.offPos?.[1] === pos ? 'selected' : ''}>${pos}</option>
+            `).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Primary Defensive Position</label>
+          <select class="form-select" id="ep-def1">
+            <option value="">— Select —</option>
+            ${['DB', 'CB', 'Rusher', 'Safety'].map(pos => `
+              <option value="${pos}" ${p.defPos?.[0] === pos ? 'selected' : ''}>${pos}</option>
+            `).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Backup Defensive Position <span style="color:var(--gray-500);font-weight:400">(optional)</span></label>
+          <select class="form-select" id="ep-def2">
+            <option value="">— None —</option>
+            ${['DB', 'CB', 'Rusher', 'Safety'].map(pos => `
+              <option value="${pos}" ${p.defPos?.[1] === pos ? 'selected' : ''}>${pos}</option>
+            `).join('')}
+          </select>
+        </div>
       </div>
       <div class="btn-row">
         <button class="btn btn-primary" onclick="saveEditPlayer(${id})">Save Changes</button>
@@ -830,16 +883,23 @@ function editPlayer(id) {
 }
 
 function saveEditPlayer(id) {
-  const name     = document.getElementById('ep-name')?.value.trim();
-  const number   = document.getElementById('ep-num')?.value.trim();
-  const position = document.getElementById('ep-pos')?.value;
+  const name   = document.getElementById('ep-name')?.value.trim();
+  const number = document.getElementById('ep-num')?.value.trim();
   if (!name) { showToast('Enter a name', 'error'); return; }
+
+  const off1 = document.getElementById('ep-off1')?.value;
+  const off2 = document.getElementById('ep-off2')?.value;
+  const def1 = document.getElementById('ep-def1')?.value;
+  const def2 = document.getElementById('ep-def2')?.value;
+
+  const offPos = [off1, off2].filter(Boolean);
+  const defPos = [def1, def2].filter(Boolean);
 
   const players = DB.getPlayers();
   const idx = players.findIndex(p => p.id === id);
   if (idx === -1) return;
 
-  players[idx] = { ...players[idx], name, number, position };
+  players[idx] = { ...players[idx], name, number, offPos, defPos };
   DB.savePlayers(players);
   showToast('Player updated!');
   document.getElementById('adminContent').innerHTML = getAdminSection('player');

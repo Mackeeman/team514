@@ -626,7 +626,11 @@ function renderPlayersTab(panel) {
               ${getInitials(p.name)}
             </div>
             <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:800;margin-bottom:2px">${p.name}</div>
-            <div style="font-size:0.8rem;color:var(--blue-light);margin-bottom:12px">#${p.number || '—'} · ${p.position}</div>
+            <div style="font-size:0.8rem;color:var(--blue-light);margin-bottom:12px">
+              #${p.number || '—'} · 
+              ${(p.offPos?.length ? p.offPos.join('/') : p.position || '—')} | 
+              ${p.defPos?.length ? p.defPos.join('/') : '—'}
+            </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
               <div style="background:var(--bg-card2);border-radius:6px;padding:6px">
                 <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:var(--blue-light)">${qs.games || 0}</div>
