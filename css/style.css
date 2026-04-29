@@ -196,6 +196,7 @@ body {
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+.grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
 
 /* ── STAT HIGHLIGHT CARDS ── */
 .stat-highlight {
@@ -748,7 +749,8 @@ body {
   body { padding-bottom: 70px; }
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
   .grid-4 { grid-template-columns: 1fr 1fr; }
-  .grid-5 { grid-template-columns: 1fr 1fr; }
+  .grid-5 { grid-template-columns: repeat(3, 1fr); }
+  .grid-6 { grid-template-columns: repeat(3, 1fr); }
   .page-hero h1 { font-size: 1.6rem; }
   .match-card { flex-wrap: wrap; }
   .match-times { text-align: left; width: 100%; border-top: 1px solid rgba(12,64,112,0.2); padding-top: 10px; }

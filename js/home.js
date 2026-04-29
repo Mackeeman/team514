@@ -13,7 +13,7 @@ function renderLeaders() {
   const players   = DB.getPlayers();
   const draftData = DB.getDraftStats();
 
-  const stats = { td: {}, rec: {}, tackle: {}, int: {} };
+  const stats = { td: {}, rec: {}, tackle: {}, int: {}, passYds: {} };
 
   history.forEach(match => {
     if (!match.playerStats) return;
@@ -23,6 +23,7 @@ function renderLeaders() {
       stats.rec[pid]    = (stats.rec[pid]     || 0) + (ps.receptions || 0);
       stats.tackle[pid] = (stats.tackle[pid]  || 0) + (ps.tackles || 0);
       stats.int[pid]    = (stats.int[pid]     || 0) + (ps.interceptions || 0);
+      stats.passYds[pid] = (stats.passYds[pid]  || 0) + (ps.passYds || 0);
     });
   });
 
@@ -42,12 +43,13 @@ function renderLeaders() {
     .sort((a, b) => a.val - b.val)[0] || null;
 
   const leaders = [
-    { icon: '🏈', label: 'Touchdowns',   unit: 'TDs this season',  leader: getLeader('td')     },
-    { icon: '🙌', label: 'Receptions',   unit: 'REC this season',  leader: getLeader('rec')    },
-    { icon: '🛡️', label: 'Tackles',      unit: 'TAC this season',  leader: getLeader('tackle') },
-    { icon: '✋', label: 'Interceptions',unit: 'INT this season',  leader: getLeader('int')    },
-    { icon: '⚡', label: 'Fastest 5 yds',unit: 's — 5yd sprint',
+    { icon: '🏈', label: 'Touchdowns',    unit: 'TDs this season',   leader: getLeader('td')      },
+    { icon: '🙌', label: 'Receptions',    unit: 'REC this season',   leader: getLeader('rec')     },
+    { icon: '🛡️', label: 'Tackles',       unit: 'TAC this season',   leader: getLeader('tackle')  },
+    { icon: '✋', label: 'Interceptions', unit: 'INT this season',   leader: getLeader('int')     },
+    { icon: '⚡', label: 'Fastest 5 yds', unit: 's — 5yd sprint',
       leader: best5yd ? { name: best5yd.player.name, value: best5yd.val } : null },
+    { icon: '🏈', label: 'Passing Yards', unit: 'pass yds this season', leader: getLeader('passYds') },
   ];
 
   const container = document.getElementById('leaders-grid');
