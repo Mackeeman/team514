@@ -828,8 +828,3 @@ body {
 .bottom-nav-item:hover {
   color: var(--blue-light);
 }
-
-/* DEBUG — remove after test */
-.bottom-nav {
-  display: block !important;
-}
