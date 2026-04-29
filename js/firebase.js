@@ -85,11 +85,13 @@ DB.set = function(key, val) {
 async function initFirebase() {
   await pullFromFirebase();
   startSync();
-  // Re-render after pull
-  const activePage = localStorage.getItem('team514_activePage') || 'home';
-  if (window.pageRenderers?.[activePage]) {
-    window.pageRenderers[activePage]();
-  }
+  // Re-render after pull with a small delay to ensure all data is loaded
+  setTimeout(() => {
+    const activePage = localStorage.getItem('team514_activePage') || 'home';
+    if (window.pageRenderers?.[activePage]) {
+      window.pageRenderers[activePage]();
+    }
+  }, 500);
   console.log('Firebase synced ✅');
 }
 
