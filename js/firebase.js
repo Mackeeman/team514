@@ -6,65 +6,77 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDpQm02A7dEkqlg66CZucwoB5c6R01j5IM",
-    authDomain: "team514.firebaseapp.com",
-    databaseURL: "https://team514-default-rtdb.firebaseio.com",
-    projectId: "team514",
-    storageBucket: "team514.firebasestorage.app",
-    messagingSenderId: "527846628671",
-    appId: "1:527846628671:web:8377505c7396315919478a"
-  };
+  apiKey: "AIzaSyDpQm02A7dEkqlg66CZucwoB5c6R01j5IM",
+  authDomain: "team514.firebaseapp.com",
+  databaseURL: "https://team514-default-rtdb.firebaseio.com",
+  projectId: "team514",
+  storageBucket: "team514.firebasestorage.app",
+  messagingSenderId: "527846628671",
+  appId: "1:527846628671:web:8377505c7396315919478a"
+};
 
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 
-// ── Keys to sync ──
 const KEYS = [
   'players', 'matches', 'history', 'trainings',
   'strategies', 'playbookUrl', 'media', 'draftStats'
 ];
 
-// ── Push all localStorage data to Firebase ──
-async function pushToFirebase() {
-  for (const key of KEYS) {
-    const val = DB.get(key);
-    if (val !== null) {
-      await set(ref(db, 'team514/' + key), val);
-    }
-  }
-}
+// Flag to prevent write loops
+let isSyncingFromFirebase = false;
 
 // ── Pull all Firebase data to localStorage ──
 async function pullFromFirebase() {
+  isSyncingFromFirebase = true;
   for (const key of KEYS) {
     const snapshot = await get(ref(db, 'team514/' + key));
     if (snapshot.exists()) {
-      DB.set(key, snapshot.val());
+      // Use original set to avoid triggering Firebase write
+      localStorage.setItem('team514_' + key, JSON.stringify(snapshot.val()));
     }
   }
+  isSyncingFromFirebase = false;
 }
 
-// ── Listen for real-time changes ──
+// ── Listen for real-time changes from OTHER devices ──
 function startSync() {
+  let initialized = false;
+  let pendingRender = false;
+
   KEYS.forEach(key => {
     onValue(ref(db, 'team514/' + key), (snapshot) => {
+      if (!initialized) return; // skip initial load (already pulled)
       if (snapshot.exists()) {
-        DB.set(key, snapshot.val());
-        // Re-render current page
-        const activePage = localStorage.getItem('team514_activePage') || 'home';
-        if (window.pageRenderers?.[activePage]) {
-          window.pageRenderers[activePage]();
+        isSyncingFromFirebase = true;
+        localStorage.setItem('team514_' + key, JSON.stringify(snapshot.val()));
+        isSyncingFromFirebase = false;
+
+        // Debounce re-render — wait for all keys to settle
+        if (!pendingRender) {
+          pendingRender = true;
+          setTimeout(() => {
+            pendingRender = false;
+            const activePage = localStorage.getItem('team514_activePage') || 'home';
+            if (window.pageRenderers?.[activePage]) {
+              window.pageRenderers[activePage]();
+            }
+          }, 300);
         }
       }
     });
   });
+
+  // Mark as initialized after first load
+  setTimeout(() => { initialized = true; }, 1000);
 }
 
-// ── Save function — writes to localStorage AND Firebase ──
+// ── Override DB.set to also write to Firebase ──
 const originalSet = DB.set.bind(DB);
 DB.set = function(key, val) {
   originalSet(key, val);
-  if (KEYS.includes(key)) {
+  // Only push to Firebase if WE made the change (not incoming sync)
+  if (!isSyncingFromFirebase && KEYS.includes(key)) {
     set(ref(db, 'team514/' + key), val).catch(console.error);
   }
 };
@@ -73,6 +85,11 @@ DB.set = function(key, val) {
 async function initFirebase() {
   await pullFromFirebase();
   startSync();
+  // Re-render after pull
+  const activePage = localStorage.getItem('team514_activePage') || 'home';
+  if (window.pageRenderers?.[activePage]) {
+    window.pageRenderers[activePage]();
+  }
   console.log('Firebase synced ✅');
 }
 

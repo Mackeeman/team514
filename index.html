@@ -1,6 +1,3 @@
-<!-- Firebase -->
-<script type="module" src="js/firebase.js"></script>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,48 +56,38 @@
   </div>
 </nav>
 
-<!-- ══════════════════════════════════════════════ -->
-<!--  HOME                                          -->
-<!-- ══════════════════════════════════════════════ -->
+<!-- HOME -->
 <div id="page-home" class="page">
   <div class="page-hero">
     <div class="page-hero-number">514</div>
-    <h1> Team 514</h1>
+    <h1>⚡ Team 514</h1>
     <p>Flag Football · Montreal · 2025 Season</p>
   </div>
   <div class="main-content">
-
     <div class="section-title">🏅 Season Leaders</div>
     <div class="grid-5" id="leaders-grid"></div>
-
     <div style="height:28px"></div>
-
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
       <div class="section-title" style="margin-bottom:0;flex:1">🏃 Training Schedule</div>
       <button class="btn btn-primary" style="font-size:0.78rem;padding:7px 14px"
         onclick="requireAdmin(() => openAdminModal('training'))">+ Edit</button>
     </div>
     <div id="trainings-list"></div>
-
     <div style="height:28px"></div>
-
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
       <div class="section-title" style="margin-bottom:0;flex:1">📅 Upcoming Matches</div>
       <button class="btn btn-primary" style="font-size:0.78rem;padding:7px 14px"
         onclick="requireAdmin(() => openAdminModal('match'))">+ Add Match</button>
     </div>
     <div id="upcoming-matches"></div>
-
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════ -->
-<!--  HISTORY                                       -->
-<!-- ══════════════════════════════════════════════ -->
+<!-- HISTORY -->
 <div id="page-history" class="page" style="display:none">
   <div class="page-hero">
     <div class="page-hero-number">514</div>
-    <h1> History</h1>
+    <h1>🏆 History</h1>
     <p>Past results and player performances</p>
   </div>
   <div class="main-content">
@@ -113,13 +100,11 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════ -->
-<!--  STATS                                         -->
-<!-- ══════════════════════════════════════════════ -->
+<!-- STATS -->
 <div id="page-stats" class="page" style="display:none">
   <div class="page-hero">
     <div class="page-hero-number">514</div>
-    <h1> Stats</h1>
+    <h1>📊 Stats</h1>
     <p>Individual performance by category</p>
   </div>
   <div class="main-content">
@@ -139,13 +124,11 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════ -->
-<!--  MEDIA                                         -->
-<!-- ══════════════════════════════════════════════ -->
+<!-- MEDIA -->
 <div id="page-media" class="page" style="display:none">
   <div class="page-hero">
     <div class="page-hero-number">514</div>
-    <h1> Media</h1>
+    <h1>📸 Media</h1>
     <p>Team photos and highlights</p>
   </div>
   <div class="main-content">
@@ -158,21 +141,19 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════ -->
-<!--  STRATEGY                                      -->
-<!-- ══════════════════════════════════════════════ -->
+<!-- STRATEGY -->
 <div id="page-strategy" class="page" style="display:none">
   <div class="page-hero">
     <div class="page-hero-number">514</div>
-    <h1> Strategy</h1>
+    <h1>⚔️ Strategy</h1>
     <p>Playbook and team strategies</p>
   </div>
   <div class="main-content">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:20px">
       <div id="strategy-tabs" class="tabs" style="flex:1;margin-bottom:0">
-        <button class="tab-btn active" data-tab="defense"  onclick="renderStrategyTab('defense')"> Defense</button>
-        <button class="tab-btn"        data-tab="offense"  onclick="renderStrategyTab('offense')"> Offense</button>
-        <button class="tab-btn"        data-tab="playbook" onclick="renderStrategyTab('playbook')"> Playbook</button>
+        <button class="tab-btn active" data-tab="defense"  onclick="renderStrategyTab('defense')">🛡️ Defense</button>
+        <button class="tab-btn"        data-tab="offense"  onclick="renderStrategyTab('offense')">⚡ Offense</button>
+        <button class="tab-btn"        data-tab="playbook" onclick="renderStrategyTab('playbook')">📖 Playbook</button>
       </div>
       <button class="btn btn-primary" style="font-size:0.78rem;padding:7px 14px"
         onclick="requireAdmin(() => openAdminModal('strategy'))">+ Add</button>
@@ -185,9 +166,7 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════ -->
-<!--  PASSWORD SCREEN                               -->
-<!-- ══════════════════════════════════════════════ -->
+<!-- PASSWORD SCREEN -->
 <div id="passwordScreen" class="password-screen">
   <div class="password-box">
     <div style="font-size:2rem;margin-bottom:8px">🔒</div>
@@ -202,21 +181,20 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════ -->
-<!--  ADMIN OVERLAY                                 -->
-<!-- ══════════════════════════════════════════════ -->
+<!-- ADMIN OVERLAY -->
 <div id="adminOverlay" class="admin-overlay" onclick="if(event.target===this)closeAdmin()">
   <div id="adminContent" style="width:100%;max-width:600px;max-height:90vh;overflow-y:auto"></div>
 </div>
 
-<!-- ── TOAST ── -->
+<!-- TOAST -->
 <div id="globalToast" class="toast"></div>
 
-<!-- ── SCRIPTS ── -->
+<!-- SCRIPTS -->
 <script src="js/data.js"></script>
 <script src="js/home.js"></script>
 <script src="js/stats.js"></script>
 <script src="js/pages.js"></script>
+<script type="module" src="js/firebase.js"></script>
 <script>
   window.pageRenderers = {
     home:     renderHome,
@@ -226,7 +204,6 @@
     strategy: renderStrategy,
   };
 
-  // Restore last active page on refresh
   const lastPage = localStorage.getItem('team514_activePage') || 'home';
   showPage(lastPage);
 
@@ -234,5 +211,6 @@
     if (e.key === 'Escape') closeAdmin();
   });
 </script>
+
 </body>
 </html>
