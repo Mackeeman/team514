@@ -101,7 +101,7 @@ function showPage(pageId) {
   if (page) {
     page.style.display = 'block';
     localStorage.setItem('team514_activePage', pageId);
-    document.querySelectorAll('.nav-link').forEach(el => {
+    document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(el => {
       el.classList.toggle('active', el.dataset.page === pageId);
     });
     if (window.pageRenderers && window.pageRenderers[pageId]) {
