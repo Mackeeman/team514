@@ -746,7 +746,7 @@ body {
 /* ── RESPONSIVE ── */
 @media (max-width: 1024px) {
   .navbar-desktop { display: none; }
-  .bottom-nav { display: block; }
+  .bottom-nav { display: block !important; }
   body { padding-bottom: 70px; }
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
   .grid-4 { grid-template-columns: 1fr 1fr; }
