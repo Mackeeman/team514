@@ -4,9 +4,10 @@
 
 function renderHome() {
   renderLeaders();
+  renderNextEvent();
+  renderLatestGamePlan();
   renderUpcomingMatches();
   renderTrainings();
-  renderLatestGamePlan();
 }
 
 function renderLeaders() {
@@ -197,4 +198,79 @@ function renderLatestGamePlan() {
       ` : ''}
     </div>
   `;
+}
+
+function renderNextEvent() {
+  const container = document.getElementById('next-event');
+  if (!container) return;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const now   = new Date();
+
+  // Get upcoming matches
+  const matches = DB.getMatches()
+    .filter(m => m.date >= today)
+    .map(m => ({ ...m, type: 'match', sortKey: m.date + 'T' + m.time }));
+
+  // Get upcoming trainings
+  const trainings = DB.getTrainings()
+    .filter(t => t.date && t.date >= today)
+    .map(t => ({ ...t, type: 'training', sortKey: t.date + 'T' + t.time }));
+
+  const all = [...matches, ...trainings].sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+
+  if (!all.length) {
+    container.innerHTML = `
+      <div class="empty-state" style="padding:24px">
+        <div class="empty-icon">📆</div>
+        <p>No upcoming events.</p>
+      </div>`;
+    return;
+  }
+
+  const next = all[0];
+
+  if (next.type === 'match') {
+    const { day, month, weekday } = formatDateShort(next.date);
+    const meetup = getMeetupTime(next.time);
+    container.innerHTML = `
+      <div class="match-card fade-in" style="border-color:var(--blue-mid);border-left:3px solid var(--blue-light);flex-wrap:nowrap">
+        <div class="match-date-block">
+          <div style="font-family:var(--font-display);font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue-light);margin-bottom:4px">🏈 Next Match</div>
+          <div class="match-day">${day}</div>
+          <div class="match-month">${month}</div>
+          <div class="match-month" style="color:var(--gray-500);font-size:0.62rem">${weekday}</div>
+        </div>
+        <div class="match-divider"></div>
+        <div class="match-info">
+          <div class="match-teams">
+            <span>514</span>
+            <span class="match-vs">VS</span>
+            <span>${next.opponent || 'TBD'}</span>
+          </div>
+          <div class="match-meta">
+            <span>📍 ${next.location || '—'}</span>
+            ${next.field ? `<span>🏟️ ${next.field}</span>` : ''}
+            ${next.note  ? `<span>💬 ${next.note}</span>`  : ''}
+          </div>
+        </div>
+        <div class="match-times">
+          <div class="match-time-main">⏰ ${next.time}</div>
+          <div class="match-time-meetup">Meet-up ${meetup}</div>
+        </div>
+      </div>
+    `;
+  } else {
+    const { day, month, weekday } = formatDateShort(next.date);
+    container.innerHTML = `
+      <div class="training-card fade-in" style="border-left:3px solid var(--blue-light)">
+        <div class="training-icon">🏃</div>
+        <div style="flex:1">
+          <div style="font-family:var(--font-display);font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue-light);margin-bottom:2px">Next Training</div>
+          <div class="training-day">${next.day} ${day} ${month} — ${next.time}</div>
+          <div class="training-detail">📍 ${next.location}${next.note ? ` · ${next.note}` : ''}</div>
+        </div>
+      </div>
+    `;
+  }
 }
