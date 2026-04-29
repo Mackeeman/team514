@@ -208,6 +208,7 @@ body {
   position: relative;
   overflow: hidden;
   transition: var(--transition);
+  align-self: start
 }
 
 .stat-highlight::before {

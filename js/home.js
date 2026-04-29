@@ -28,9 +28,11 @@ function renderLeaders() {
   });
 
   const getLeader = (stat) => {
-    const entries = Object.entries(stats[stat]);
+    const entries = Object.entries(stats[stat] || {});
     if (!entries.length) return null;
-    const [pid, val] = entries.sort((a, b) => b[1] - a[1])[0];
+    const sorted = entries.sort((a, b) => b[1] - a[1]);
+    if (!sorted.length || sorted[0][1] === 0) return null;
+    const [pid, val] = sorted[0];
     const player = players.find(p => p.id === Number(pid));
     return player ? { name: player.name, value: val } : null;
   };
@@ -43,13 +45,13 @@ function renderLeaders() {
     .sort((a, b) => a.val - b.val)[0] || null;
 
   const leaders = [
-    { icon: '🏈', label: 'Touchdowns',    unit: 'TDs this season',   leader: getLeader('td')      },
-    { icon: '🙌', label: 'Receptions',    unit: 'REC this season',   leader: getLeader('rec')     },
-    { icon: '🛡️', label: 'Tackles',       unit: 'TAC this season',   leader: getLeader('tackle')  },
-    { icon: '✋', label: 'Interceptions', unit: 'INT this season',   leader: getLeader('int')     },
+    { icon: '🏈', label: 'Touchdowns',    unit: 'TDs this season',      leader: getLeader('td')       },
+    { icon: '🙌', label: 'Receptions',    unit: 'REC this season',      leader: getLeader('rec')      },
+    { icon: '🛡️', label: 'Tackles',       unit: 'TAC this season',      leader: getLeader('tackle')   },
+    { icon: '✋', label: 'Interceptions', unit: 'INT this season',      leader: getLeader('int')      },
     { icon: '⚡', label: 'Fastest 5 yds', unit: 's — 5yd sprint',
       leader: best5yd ? { name: best5yd.player.name, value: best5yd.val } : null },
-    { icon: '🏈', label: 'Passing Yards', unit: 'pass yds this season', leader: getLeader('passYds') },
+    { icon: '🎯', label: 'Passing Yards', unit: 'pass yds this season', leader: getLeader('passYds')  },
   ];
 
   const container = document.getElementById('leaders-grid');
