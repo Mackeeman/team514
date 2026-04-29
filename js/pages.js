@@ -1262,7 +1262,7 @@ function deleteSection(sectionName) {
 
 function openPlayForm(id) {
   const existing = id ? DB.getPlaybook().find(p => p.id === id) : null;
-  const sections = [...new Set(DB.getPlaybook().map(p => p.section || 'General'))];
+  const sections = DB.getPlaybookSections();
   const overlay  = document.getElementById('adminOverlay');
   const content  = document.getElementById('adminContent');
   overlay.classList.add('open');
