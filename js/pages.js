@@ -81,6 +81,10 @@ function renderHistory() {
               <span class="score-separator">—</span>
               <span class="score-them">${them}</span>
             </div>
+            ${DB.isAdminSession() ? `
+              <button class="btn btn-ghost" style="font-size:0.72rem;padding:4px 10px"
+                onclick="editResult(${match.id})">✏️</button>
+            ` : ''}
           </div>
         </div>
         ${match.note ? `<div style="font-size:0.82rem;color:var(--gray-300);font-style:italic">"${match.note}"</div>` : ''}
@@ -779,4 +783,134 @@ function saveEditPlayer(id) {
   DB.savePlayers(players);
   showToast('Player updated!');
   document.getElementById('adminContent').innerHTML = getAdminSection('player');
+}
+
+function editResult(id) {
+  const history = DB.getHistory();
+  const match   = history.find(m => m.id === id);
+  const players = DB.getPlayers();
+  if (!match) return;
+
+  const overlay = document.getElementById('adminOverlay');
+  const content = document.getElementById('adminContent');
+  overlay.classList.add('open');
+
+  content.innerHTML = `
+    <div class="admin-modal">
+      <button class="btn btn-ghost" style="margin-bottom:16px;font-size:0.8rem"
+        onclick="closeAdmin()">← Back</button>
+      <h2>✏️ Edit Result</h2>
+      <div class="form-group"><label class="form-label">Opponent</label>
+        <input class="form-input" id="er-opp" value="${match.opponent || ''}" /></div>
+      <div class="form-group"><label class="form-label">Date</label>
+        <input class="form-input" type="date" id="er-date" value="${match.date || ''}" /></div>
+      <div class="form-group"><label class="form-label">Location</label>
+        <input class="form-input" id="er-loc" value="${match.location || ''}" /></div>
+      <div class="form-group"><label class="form-label">Season</label>
+        <input class="form-input" id="er-season" value="${match.season || ''}" /></div>
+      <div class="grid-2">
+        <div class="form-group"><label class="form-label">Score — 514</label>
+          <input class="form-input" type="number" id="er-us" min="0" value="${match.scoreUs ?? ''}" /></div>
+        <div class="form-group"><label class="form-label">Score — Opponent</label>
+          <input class="form-input" type="number" id="er-them" min="0" value="${match.scoreThem ?? ''}" /></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="er-note">${match.note || ''}</textarea></div>
+      <div style="margin:16px 0">
+        <div class="section-title" style="font-size:1rem;margin-bottom:12px">Player Stats</div>
+        ${players.map(p => {
+          const ps = match.playerStats?.[p.id] || {};
+          return `
+            <details style="margin-bottom:10px;background:var(--bg-card2);border-radius:8px;border:1px solid rgba(12,64,112,0.3)">
+              <summary style="padding:12px 16px;cursor:pointer;font-family:var(--font-display);font-weight:700">${p.name}</summary>
+              <div style="padding:12px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">
+                ${[
+                  ['receptions',   'Receptions'],
+                  ['recYds',       'Receiving Yards'],
+                  ['recTd',        'Receiving TDs'],
+                  ['recTd1pt',     '1pt Conv (rec)'],
+                  ['recTd2pt',     '2pt Conv (rec)'],
+                  ['rushYds',      'Rushing Yards'],
+                  ['rushAtt',      'Rush Attempts'],
+                  ['rushTd',       'Rushing TDs'],
+                  ['rushTd2pt',    '2pt Conv (rush)'],
+                  ['passComp',     'Completions'],
+                  ['passAtt',      'Pass Attempts'],
+                  ['passYds',      'Passing Yards'],
+                  ['passTd',       'Passing TDs'],
+                  ['passInt',      'Interceptions Thrown'],
+                  ['passSack',     'Times Sacked'],
+                  ['muffedSnap',   'Muffed Snaps'],
+                  ['tackles',      'Tackles'],
+                  ['sacks',        'Sacks'],
+                  ['interceptions','Interceptions'],
+                  ['safeties',     'Safeties'],
+                  ['passDefense',  'Pass Defense'],
+                  ['pick6',        'Pick-6'],
+                  ['pick1',        'Pick-1pt'],
+                  ['pick2',        'Pick-2pts'],
+                ].map(([k, label]) => `
+                  <div>
+                    <label style="font-size:0.7rem;color:var(--gray-300);display:block;margin-bottom:3px">${label}</label>
+                    <input type="number" min="0" class="form-input" style="padding:6px 10px"
+                      data-player="${p.id}" data-stat="${k}" value="${ps[k] || 0}" />
+                  </div>
+                `).join('')}
+              </div>
+            </details>
+          `;
+        }).join('')}
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveEditResult(${id})">Save Changes</button>
+        <button class="btn btn-danger" onclick="deleteResult(${id})">Delete Match</button>
+        <button class="btn btn-ghost" onclick="closeAdmin()">Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+function saveEditResult(id) {
+  const opp    = document.getElementById('er-opp')?.value.trim();
+  const date   = document.getElementById('er-date')?.value;
+  const loc    = document.getElementById('er-loc')?.value.trim();
+  const season = document.getElementById('er-season')?.value.trim();
+  const us     = document.getElementById('er-us')?.value;
+  const them   = document.getElementById('er-them')?.value;
+  const note   = document.getElementById('er-note')?.value.trim();
+  if (!opp || !date) { showToast('Fill in all required fields', 'error'); return; }
+
+  const playerStats = {};
+  document.querySelectorAll('[data-player][data-stat]').forEach(input => {
+    const pid  = input.dataset.player;
+    const stat = input.dataset.stat;
+    const val  = Number(input.value) || 0;
+    if (val > 0) {
+      if (!playerStats[pid]) playerStats[pid] = {};
+      playerStats[pid][stat] = val;
+    }
+  });
+
+  const history = DB.getHistory();
+  const idx = history.findIndex(m => m.id === id);
+  if (idx === -1) return;
+
+  history[idx] = {
+    ...history[idx],
+    opponent: opp, date, location: loc, season,
+    scoreUs:   us   !== '' ? Number(us)   : undefined,
+    scoreThem: them !== '' ? Number(them) : undefined,
+    note, playerStats
+  };
+
+  DB.saveHistory(history);
+  showToast('Result updated!');
+  closeAdmin();
+}
+
+function deleteResult(id) {
+  if (!confirm('Delete this match permanently?')) return;
+  DB.saveHistory(DB.getHistory().filter(m => m.id !== id));
+  showToast('Match deleted');
+  closeAdmin();
 }
