@@ -52,15 +52,14 @@ function renderLeaders() {
     .sort((a, b) => a.val - b.val)[0] || null;
 
   const leaders = [
-    { icon: '🎯', label: 'Passing Leader',  unit: 'this season',
+    { icon: '🎯', label: 'Passing Leader', unit: 'this season',
       leader: (() => {
-        const l = getLeader('passYds');
-        if (!l) return null;
         const tdLeader = getLeader('passTd');
-        const tds = tdLeader?.names.some(n => l.names.includes(n))
-          ? stats.passTd[Object.entries(stats.passTd).sort((a,b) => b[1]-a[1])[0]?.[0]] || 0
-          : 0;
-        return { ...l, tds };
+        if (!tdLeader) return null;
+        // Get passing yards for the TD leader
+        const topPid = Object.entries(stats.passTd).sort((a,b) => b[1]-a[1])[0]?.[0];
+        const yds = topPid ? (stats.passYds[topPid] || 0) : 0;
+        return { ...tdLeader, tds: tdLeader.value, value: yds };
       })()
     },
     { icon: '🏈', label: 'Touchdowns',    unit: 'TDs this season',      leader: getLeader('td')       },
