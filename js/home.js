@@ -21,7 +21,7 @@ function renderLeaders() {
     if (!match.playerStats) return;
     Object.entries(match.playerStats).forEach(([pid, ps]) => {
       pid = Number(pid);
-      stats.td[pid]     = (stats.td[pid]     || 0) + (ps.recTd || 0) + (ps.rushTd || 0) + (ps.passTd || 0);
+      stats.td[pid] = (stats.td[pid] || 0) + (ps.recTd || 0) + (ps.rushTd || 0);
       stats.rec[pid]    = (stats.rec[pid]     || 0) + (ps.receptions || 0);
       stats.tackle[pid] = (stats.tackle[pid]  || 0) + (ps.tackles || 0);
       stats.int[pid]    = (stats.int[pid]     || 0) + (ps.interceptions || 0);
@@ -81,8 +81,8 @@ function renderLeaders() {
         <div class="stat-player" style="font-size:${l.leader.names.length > 1 ? '0.85rem' : '1.2rem'}">${l.leader.names.join(' & ')}</div>
         ${l.leader.names.length > 1 ? `<div style="font-size:0.68rem;color:var(--gold);margin-bottom:2px">🤝 Tied</div>` : ''}
         ${l.leader.tds !== undefined ? `
-          <div class="stat-value">${l.leader.value}<span style="font-size:1rem"> yds</span></div>
-          <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--white)">${l.leader.tds} TDs</div>
+          <div class="stat-value">${l.leader.tds}<span style="font-size:1rem"> TDs</span></div>
+          <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--gray-300)">${l.leader.value} yds</div>
         ` : `
           <div class="stat-value">${l.leader.value}</div>
         `}
