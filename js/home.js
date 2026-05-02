@@ -57,7 +57,7 @@ function renderLeaders() {
     { icon: '🛡️', label: 'Tackles',       unit: 'TAC this season',      leader: getLeader('tackle')   },
     { icon: '✋', label: 'Interceptions', unit: 'INT this season',      leader: getLeader('int')      },
     { icon: '⚡', label: 'Fastest 5 yds', unit: 's — 5yd sprint',
-      leader: best5yd ? { name: best5yd.player.name, value: best5yd.val } : null },
+      leader: best5yd ? { names: [best5yd.player.name], value: best5yd.val } : null },
   ];
 
   const container = document.getElementById('leaders-grid');
