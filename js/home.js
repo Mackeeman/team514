@@ -15,7 +15,7 @@ function renderLeaders() {
   const players   = DB.getPlayers();
   const draftData = DB.getDraftStats();
 
-  const stats = { td: {}, rec: {}, tackle: {}, int: {}, passYds: {} };
+  const stats = { td: {}, rec: {}, tackle: {}, int: {}, passYds: {},passTd: {} };
 
   history.forEach(match => {
     if (!match.playerStats) return;
@@ -26,6 +26,7 @@ function renderLeaders() {
       stats.tackle[pid] = (stats.tackle[pid]  || 0) + (ps.tackles || 0);
       stats.int[pid]    = (stats.int[pid]     || 0) + (ps.interceptions || 0);
       stats.passYds[pid] = (stats.passYds[pid]  || 0) + (ps.passYds || 0);
+      stats.passTd[pid] = (stats.passTd[pid] || 0) + (ps.passTd || 0);
     });
   });
 
@@ -51,7 +52,17 @@ function renderLeaders() {
     .sort((a, b) => a.val - b.val)[0] || null;
 
   const leaders = [
-    { icon: '🎯', label: 'Passing Yards', unit: 'pass yds this season', leader: getLeader('passYds')  },
+    { icon: '🎯', label: 'Passing Leader',  unit: 'this season',
+      leader: (() => {
+        const l = getLeader('passYds');
+        if (!l) return null;
+        const tdLeader = getLeader('passTd');
+        const tds = tdLeader?.names.some(n => l.names.includes(n))
+          ? stats.passTd[Object.entries(stats.passTd).sort((a,b) => b[1]-a[1])[0]?.[0]] || 0
+          : 0;
+        return { ...l, tds };
+      })()
+    },
     { icon: '🏈', label: 'Touchdowns',    unit: 'TDs this season',      leader: getLeader('td')       },
     { icon: '🙌', label: 'Receptions',    unit: 'REC this season',      leader: getLeader('rec')      },
     { icon: '🛡️', label: 'Tackles',       unit: 'TAC this season',      leader: getLeader('tackle')   },
@@ -70,7 +81,12 @@ function renderLeaders() {
       ${l.leader ? `
         <div class="stat-player" style="font-size:${l.leader.names.length > 1 ? '0.85rem' : '1.2rem'}">${l.leader.names.join(' & ')}</div>
         ${l.leader.names.length > 1 ? `<div style="font-size:0.68rem;color:var(--gold);margin-bottom:2px">🤝 Tied</div>` : ''}
-        <div class="stat-value">${l.leader.value}</div>
+        ${l.leader.tds !== undefined ? `
+          <div class="stat-value">${l.leader.value}<span style="font-size:1rem"> yds</span></div>
+          <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--white)">${l.leader.tds} TDs</div>
+        ` : `
+          <div class="stat-value">${l.leader.value}</div>
+        `}
         <div class="stat-label">${l.unit}</div>
       ` : `
         <div style="color:var(--gray-500);font-size:0.85rem;padding:10px 0">No data yet</div>
