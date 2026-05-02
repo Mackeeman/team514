@@ -373,6 +373,18 @@ function getAdminSection(section) {
           <div class="form-group"><label class="form-label">Notes</label>
             <textarea class="form-textarea" id="ar-note" placeholder="Game summary..."></textarea></div>
           <div style="margin:16px 0">
+            <div class="section-title" style="font-size:1rem;margin-bottom:12px">✅ Players Present</div>
+            <p style="font-size:0.8rem;color:var(--gray-500);margin-bottom:10px">Check all players who played this game — even if they have no recorded stats.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">
+              ${players.map(p => `
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--bg-card2);border:1px solid rgba(12,64,112,0.3);border-radius:6px;padding:6px 12px;font-size:0.85rem">
+                  <input type="checkbox" name="ar-present" value="${p.id}" style="accent-color:var(--blue-light)" />
+                  ${p.name}
+                </label>
+              `).join('')}
+            </div>
+          </div>
+          <div style="margin:16px 0">
             <div class="section-title" style="font-size:1rem;margin-bottom:12px">Player Stats</div>
             ${players.map(p => `
               <details style="margin-bottom:10px;background:var(--bg-card2);border-radius:8px;border:1px solid rgba(12,64,112,0.3)">
@@ -673,13 +685,15 @@ function saveResult() {
       playerStats[pid][stat] = val;
     }
   });
+  const playersPresent = [...document.querySelectorAll('input[name="ar-present"]:checked')]
+    .map(i => Number(i.value));
 
   const history = DB.getHistory();
   history.push({
     id: Date.now(), opponent: opp, date, location: loc, season,
     scoreUs:   us   !== '' ? Number(us)   : undefined,
     scoreThem: them !== '' ? Number(them) : undefined,
-    note, playerStats
+    note, playerStats, playersPresent
   });
   DB.saveHistory(history);
   showToast('Result saved!');
@@ -937,6 +951,20 @@ function editResult(id) {
       <div class="form-group"><label class="form-label">Notes</label>
         <textarea class="form-textarea" id="er-note">${match.note || ''}</textarea></div>
       <div style="margin:16px 0">
+        <div class="section-title" style="font-size:1rem;margin-bottom:12px">✅ Players Present</div>
+        <p style="font-size:0.8rem;color:var(--gray-500);margin-bottom:10px">Check all players who played this game.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">
+          ${players.map(p => `
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--bg-card2);border:1px solid rgba(12,64,112,0.3);border-radius:6px;padding:6px 12px;font-size:0.85rem">
+              <input type="checkbox" name="er-present" value="${p.id}"
+                ${(match.playersPresent || []).includes(p.id) ? 'checked' : ''}
+                style="accent-color:var(--blue-light)" />
+              ${p.name}
+            </label>
+          `).join('')}
+        </div>
+      </div>
+      <div style="margin:16px 0">
         <div class="section-title" style="font-size:1rem;margin-bottom:12px">Player Stats</div>
         ${players.map(p => {
           const ps = match.playerStats?.[p.id] || {};
@@ -998,6 +1026,8 @@ function saveEditResult(id) {
   const us     = document.getElementById('er-us')?.value;
   const them   = document.getElementById('er-them')?.value;
   const note   = document.getElementById('er-note')?.value.trim();
+  const playersPresent = [...document.querySelectorAll('input[name="er-present"]:checked')]
+      .map(i => Number(i.value));
   if (!opp || !date) { showToast('Fill in all required fields', 'error'); return; }
 
   const playerStats = {};
@@ -1020,7 +1050,7 @@ function saveEditResult(id) {
     opponent: opp, date, location: loc, season,
     scoreUs:   us   !== '' ? Number(us)   : undefined,
     scoreThem: them !== '' ? Number(them) : undefined,
-    note, playerStats
+    note, playerStats, playersPresent
   };
 
   DB.saveHistory(history);

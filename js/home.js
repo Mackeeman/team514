@@ -34,9 +34,13 @@ function renderLeaders() {
     if (!entries.length) return null;
     const sorted = entries.sort((a, b) => b[1] - a[1]);
     if (!sorted.length || sorted[0][1] === 0) return null;
-    const [pid, val] = sorted[0];
-    const player = players.find(p => p.id === Number(pid));
-    return player ? { name: player.name, value: val } : null;
+    const bestVal = sorted[0][1];
+    const tied = sorted.filter(([, v]) => v === bestVal);
+    const names = tied.map(([pid]) => {
+      const player = players.find(p => p.id === Number(pid));
+      return player ? player.name : null;
+    }).filter(Boolean);
+    return { value: bestVal, names };
   };
 
   // Best 5yd sprint from draft data (lower is better)
@@ -64,7 +68,8 @@ function renderLeaders() {
       <span class="stat-icon">${l.icon}</span>
       <div class="stat-name">${l.label}</div>
       ${l.leader ? `
-        <div class="stat-player">${l.leader.name}</div>
+        <div class="stat-player" style="font-size:${l.leader.names.length > 1 ? '0.85rem' : '1.2rem'}">${l.leader.names.join(' & ')}</div>
+        ${l.leader.names.length > 1 ? `<div style="font-size:0.68rem;color:var(--gold);margin-bottom:2px">🤝 Tied</div>` : ''}
         <div class="stat-value">${l.leader.value}</div>
         <div class="stat-label">${l.unit}</div>
       ` : `

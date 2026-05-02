@@ -69,6 +69,13 @@ function aggregateStats() {
   });
 
   history.forEach(match => {
+    // Count games played for all present players
+    if (match.playersPresent?.length) {
+      match.playersPresent.forEach(pid => {
+        if (agg[pid]) agg[pid].gamesPlayed++;
+      });
+    }
+
     if (!match.playerStats) return;
     Object.entries(match.playerStats).forEach(([pid, ps]) => {
       pid = Number(pid);
